@@ -2,9 +2,9 @@ import React, { useState, useEffect } from 'react';
 import Layout from './components/Layout';
 import Dashboard from './components/Dashboard';
 import TransactionScreen from './components/TransactionScreen';
-import { Transaction, Goal, Category, TransactionType } from './types';
+import { Transaction, Goal, Category, TransactionType, AIAdviceResponse } from './types';
 import { Search, Filter, AlertTriangle, TrendingUp, TrendingDown, Target, Bot, Pencil, X, Check } from 'lucide-react';
-// import { getFullConsultancy } from './services/geminiService';
+import { getFullConsultancy } from './services/geminiService';
 
 // Mock Initial Data
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -354,23 +354,36 @@ const GoalsView: React.FC<{goals: Goal[], setGoals: Function}> = ({ goals, setGo
 };
 
 const AIConsultant: React.FC<{transactions: Transaction[], goals: Goal[]}> = ({ transactions, goals }) => {
-    const [report, setReport] = useState<any>(null);
+    const [report, setReport] = useState<AIAdviceResponse['fullAnalysis'] | undefined>(undefined);
     const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     const handleAnalyze = async () => {
-  setLoading(true);
-  setTimeout(() => {
-    setReport({
-      status: "Saudável",
-      healthScore: 82,
-      analysis: "Simulação local funcionando.",
-      cutSuggestions: ["Reduzir gastos com lazer"],
-      investmentTips: ["Renda fixa", "Tesouro Selic"]
-    });
-    setLoading(false);
-  }, 1000);
-};
+      setLoading(true);
+      setError(null);
+      try {
+        const result = await getFullConsultancy(transactions, goals);
+        setReport(result);
+      } catch (e) {
+        console.error(e);
+        setError("Não foi possível gerar a consultoria. Verifique se a API Key está configurada corretamente nas variáveis de ambiente do Vercel.");
+      } finally {
+        setLoading(false);
+      }
+    };
 
+    if (error) {
+        return (
+            <div className="h-full flex flex-col items-center justify-center text-center p-8">
+                 <div className="bg-red-100 p-4 rounded-full mb-4">
+                     <AlertTriangle className="w-8 h-8 text-red-600" />
+                 </div>
+                 <h2 className="text-xl font-bold text-gray-800 mb-2">Erro na Consultoria</h2>
+                 <p className="text-gray-600 max-w-md mb-6">{error}</p>
+                 <button onClick={() => setError(null)} className="text-blue-600 hover:underline">Tentar novamente</button>
+            </div>
+        );
+    }
 
     if (!report && !loading) {
         return (
@@ -393,40 +406,44 @@ const AIConsultant: React.FC<{transactions: Transaction[], goals: Goal[]}> = ({ 
         return (
             <div className="h-full flex flex-col items-center justify-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mb-4"></div>
-                <p className="text-gray-500 animate-pulse">Analisando dados financeiros...</p>
+                <p className="text-gray-500 animate-pulse">Analisando dados financeiros com Gemini AI...</p>
             </div>
         );
     }
 
+    if (!report) return null;
+
     return (
-        <div className="space-y-8 animate-fade-in">
+        <div className="space-y-8 animate-fade-in pb-12">
             <div className="flex items-center gap-4 mb-4">
-                 <button onClick={() => setReport(null)} className="text-sm text-gray-500 hover:text-gray-800">&larr; Voltar</button>
+                 <button onClick={() => setReport(undefined)} className="text-sm text-gray-500 hover:text-gray-800">&larr; Voltar</button>
                  <h2 className="text-2xl font-bold text-gray-800">Relatório do Consultor</h2>
             </div>
 
-            <div className={`p-6 rounded-xl border-l-8 ${report.status === 'Saudável' ? 'border-green-500 bg-green-50' : 'border-yellow-500 bg-yellow-50'}`}>
-                <h3 className="text-xl font-bold mb-2">Saúde Financeira: {report.status} ({report.healthScore}/100)</h3>
-                <p className="text-gray-800 leading-relaxed">{report.analysis}</p>
+            <div className={`p-6 rounded-xl border-l-8 ${report.status === 'Saudável' ? 'border-green-500 bg-green-50' : report.status === 'Alerta' ? 'border-yellow-500 bg-yellow-50' : 'border-red-500 bg-red-50'}`}>
+                <h3 className="text-xl font-bold mb-2 text-gray-800">Saúde Financeira: <span className={report.status === 'Saudável' ? 'text-green-700' : report.status === 'Alerta' ? 'text-yellow-700' : 'text-red-700'}>{report.status}</span> ({report.healthScore}/100)</h3>
+                <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{report.analysis}</p>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 className="font-bold text-red-600 flex items-center gap-2 mb-4"><TrendingDown className="w-5 h-5" /> Onde Cortar</h4>
-                    <ul className="space-y-2">
+                    <h4 className="font-bold text-red-600 flex items-center gap-2 mb-4"><TrendingDown className="w-5 h-5" /> Sugestões de Cortes</h4>
+                    <ul className="space-y-3">
                         {report.cutSuggestions.map((s: string, i: number) => (
-                            <li key={i} className="flex gap-2 text-sm text-gray-700">
-                                <span className="text-red-400">•</span> {s}
+                            <li key={i} className="flex gap-3 text-sm text-gray-700 items-start">
+                                <span className="text-red-400 mt-1">•</span> 
+                                <span>{s}</span>
                             </li>
                         ))}
                     </ul>
                 </div>
                 <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h4 className="font-bold text-green-600 flex items-center gap-2 mb-4"><TrendingUp className="w-5 h-5" /> Onde Investir</h4>
-                    <ul className="space-y-2">
+                    <h4 className="font-bold text-green-600 flex items-center gap-2 mb-4"><TrendingUp className="w-5 h-5" /> Onde Investir (Brasil)</h4>
+                    <ul className="space-y-3">
                         {report.investmentTips.map((s: string, i: number) => (
-                            <li key={i} className="flex gap-2 text-sm text-gray-700">
-                                <span className="text-green-400">•</span> {s}
+                            <li key={i} className="flex gap-3 text-sm text-gray-700 items-start">
+                                <span className="text-green-400 mt-1">•</span> 
+                                <span>{s}</span>
                             </li>
                         ))}
                     </ul>
