@@ -9,5 +9,16 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 1000, // Aumenta o limite do aviso para 1MB
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          vendor: ['react', 'react-dom'],
+          charts: ['recharts'],
+          ai: ['@google/genai'],
+          icons: ['lucide-react']
+        }
+      }
+    }
   }
 });
