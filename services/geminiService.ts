@@ -1,8 +1,6 @@
 import { GoogleGenAI, Type, Schema } from "@google/genai";
 import { Transaction, Goal, AIAdviceResponse } from "../types";
 
-const genAI = new GoogleGenAI({ apiKey: process.env.API_KEY });
-
 const dashboardSchema: Schema = {
   type: Type.OBJECT,
   properties: {
@@ -32,14 +30,27 @@ const fullConsultantSchema: Schema = {
   required: ["fullAnalysis"]
 };
 
+// Inicializa o cliente apenas quando necessário para evitar erros no carregamento da página
+const getAIClient = () => {
+  const apiKey = process.env.API_KEY;
+  if (!apiKey) {
+    console.warn("API_KEY não encontrada nas variáveis de ambiente.");
+    return null;
+  }
+  return new GoogleGenAI({ apiKey });
+};
+
 export const getDashboardInsight = async (transactions: Transaction[]): Promise<string> => {
+  const ai = getAIClient();
+  if (!ai) return "Configure sua API Key para ver insights.";
+
   const model = "gemini-2.5-flash";
   const recent = transactions.slice(0, 10).map(t => `${t.type}: ${t.description} R$${t.amount}`).join("\n");
   
   const prompt = `Analise estas últimas transações e gere um "insight flash" (max 30 palavras) para o dashboard do Easy Coin System. Seja motivacional ou de alerta. Dados: ${recent}`;
 
   try {
-    const response = await genAI.models.generateContent({
+    const response = await ai.models.generateContent({
       model,
       contents: prompt,
       config: { responseMimeType: "application/json", responseSchema: dashboardSchema }
@@ -52,6 +63,9 @@ export const getDashboardInsight = async (transactions: Transaction[]): Promise<
 };
 
 export const getFullConsultancy = async (transactions: Transaction[], goals: Goal[]): Promise<AIAdviceResponse['fullAnalysis']> => {
+  const ai = getAIClient();
+  if (!ai) throw new Error("API Key não configurada no ambiente.");
+
   const model = "gemini-2.5-flash";
   
   const financialSummary = transactions.reduce((acc, t) => {
@@ -70,7 +84,7 @@ export const getFullConsultancy = async (transactions: Transaction[], goals: Goa
   `;
 
   try {
-    const response = await genAI.models.generateContent({
+    const response = await ai.models.generateContent({
       model,
       contents: prompt,
       config: { 
