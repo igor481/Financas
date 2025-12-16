@@ -4,7 +4,7 @@ import Dashboard from './components/Dashboard';
 import TransactionScreen from './components/TransactionScreen';
 import { Transaction, Goal, Category, TransactionType } from './types';
 import { Search, Filter, AlertTriangle, TrendingUp, TrendingDown, Target, Bot, Pencil, X, Check } from 'lucide-react';
-import { getFullConsultancy } from './services/geminiService';
+// import { getFullConsultancy } from './services/geminiService';
 
 // Mock Initial Data
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -358,15 +358,19 @@ const AIConsultant: React.FC<{transactions: Transaction[], goals: Goal[]}> = ({ 
     const [loading, setLoading] = useState(false);
 
     const handleAnalyze = async () => {
-        setLoading(true);
-        try {
-            const result = await getFullConsultancy(transactions, goals);
-            setReport(result);
-        } catch (e) {
-            alert("Erro ao conectar com IA");
-        }
-        setLoading(false);
-    };
+  setLoading(true);
+  setTimeout(() => {
+    setReport({
+      status: "Saudável",
+      healthScore: 82,
+      analysis: "Simulação local funcionando.",
+      cutSuggestions: ["Reduzir gastos com lazer"],
+      investmentTips: ["Renda fixa", "Tesouro Selic"]
+    });
+    setLoading(false);
+  }, 1000);
+};
+
 
     if (!report && !loading) {
         return (
