@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Transaction, TransactionType, Category } from '../types';
-import { Plus, Upload, Calendar, Tag, DollarSign, ListPlus, Check, X } from 'lucide-react';
+import { Plus, Upload, Calendar, Tag, DollarSign, ListPlus, Check, X, Grid } from 'lucide-react';
 import * as Icons from 'lucide-react';
 
 interface Props {
@@ -13,6 +13,13 @@ interface Props {
   description: string;
 }
 
+const AVAILABLE_ICONS = [
+    'Tag', 'Home', 'Utensils', 'Car', 'ShoppingBag', 'Receipt', 
+    'HeartPulse', 'GraduationCap', 'Briefcase', 'TrendingUp', 
+    'Ticket', 'Smartphone', 'PawPrint', 'Plane', 'Dumbbell', 
+    'Wrench', 'Gift', 'Music', 'Coffee', 'Banknote', 'Coins'
+];
+
 const TransactionScreen: React.FC<Props> = ({ type, transactions, onAdd, categories, onAddCategory, title, description }) => {
   const [amount, setAmount] = useState('');
   const [desc, setDesc] = useState('');
@@ -22,6 +29,7 @@ const TransactionScreen: React.FC<Props> = ({ type, transactions, onAdd, categor
   const [isRecurring, setIsRecurring] = useState(false);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCatName, setNewCatName] = useState('');
+  const [newCatIcon, setNewCatIcon] = useState('Tag');
 
   // Filter only relevant transactions for display
   const relevantTransactions = transactions.filter(t => t.type === type);
@@ -74,9 +82,10 @@ const TransactionScreen: React.FC<Props> = ({ type, transactions, onAdd, categor
 
   const handleCreateCategory = () => {
       if(newCatName) {
-          onAddCategory(newCatName, 'Tag', isIncome ? 'income' : 'expense');
+          onAddCategory(newCatName, newCatIcon, isIncome ? 'income' : 'expense');
           setCategory(newCatName);
           setNewCatName('');
+          setNewCatIcon('Tag');
           setIsAddingCategory(false);
       }
   };
@@ -141,16 +150,28 @@ const TransactionScreen: React.FC<Props> = ({ type, transactions, onAdd, categor
                 </div>
                 
                 {isAddingCategory ? (
-                    <div className="flex gap-2">
+                    <div className="space-y-3 bg-gray-50 p-3 rounded-lg border border-gray-200">
                         <input 
                             type="text" 
-                            className="flex-1 px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900"
+                            className="w-full px-3 py-2 border border-gray-200 rounded-lg text-sm text-gray-900 focus:outline-none focus:border-blue-500"
                             placeholder="Nome da categoria"
                             value={newCatName}
                             onChange={(e) => setNewCatName(e.target.value)}
                         />
-                        <button type="button" onClick={handleCreateCategory} className="bg-green-600 text-white p-2 rounded-lg">
-                            <Check className="w-4 h-4" />
+                        <div className="grid grid-cols-7 gap-1">
+                             {AVAILABLE_ICONS.map(icon => (
+                                 <button 
+                                    key={icon}
+                                    type="button"
+                                    onClick={() => setNewCatIcon(icon)}
+                                    className={`p-1.5 rounded hover:bg-white flex justify-center items-center transition ${newCatIcon === icon ? 'bg-white shadow text-blue-600 ring-1 ring-blue-500' : 'text-gray-400'}`}
+                                 >
+                                     {renderIcon(icon)}
+                                 </button>
+                             ))}
+                        </div>
+                        <button type="button" onClick={handleCreateCategory} className="w-full bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-lg flex justify-center items-center gap-2 text-sm font-medium">
+                            <Check className="w-4 h-4" /> Criar Categoria
                         </button>
                     </div>
                 ) : (

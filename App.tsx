@@ -20,17 +20,20 @@ const INITIAL_GOALS: Goal[] = [
 ];
 
 const INITIAL_CATEGORIES: Category[] = [
-    { id: '1', name: 'Salário', icon: 'Wallet', type: 'income' },
+    { id: '1', name: 'Salário', icon: 'Banknote', type: 'income' },
     { id: '2', name: 'Investimentos', icon: 'TrendingUp', type: 'income' },
-    { id: '3', name: 'Freelance/Extra', icon: 'Briefcase', type: 'income' },
+    { id: '3', name: 'Freelance/Extra', icon: 'Coins', type: 'income' },
     { id: '4', name: 'Moradia', icon: 'Home', type: 'expense' },
     { id: '5', name: 'Alimentação', icon: 'Utensils', type: 'expense' },
     { id: '6', name: 'Transporte', icon: 'Car', type: 'expense' },
-    { id: '7', name: 'Lazer', icon: 'PartyPopper', type: 'expense' },
-    { id: '8', name: 'Saúde', icon: 'Heart', type: 'expense' },
-    { id: '9', name: 'Educação', icon: 'BookOpen', type: 'expense' },
+    { id: '7', name: 'Lazer', icon: 'Ticket', type: 'expense' },
+    { id: '8', name: 'Saúde', icon: 'HeartPulse', type: 'expense' },
+    { id: '9', name: 'Educação', icon: 'GraduationCap', type: 'expense' },
     { id: '10', name: 'Compras', icon: 'ShoppingBag', type: 'expense' },
-    { id: '11', name: 'Contas', icon: 'Zap', type: 'expense' },
+    { id: '11', name: 'Contas', icon: 'Receipt', type: 'expense' },
+    { id: '12', name: 'Assinaturas', icon: 'Smartphone', type: 'expense' },
+    { id: '13', name: 'Pets', icon: 'PawPrint', type: 'expense' },
+    { id: '14', name: 'Viagem', icon: 'Plane', type: 'expense' },
 ];
 
 const App: React.FC = () => {
